@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Customer Management</h1>
+
+{% if current_user.role == 'admin' %}
+<div class="bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
+    <h2 class="text-xl font-bold mb-4 text-gray-800">Add New Customer</h2>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="name" placeholder="Customer Name" class="border p-2 rounded w-full" required>
+        <input type="text" name="contact" placeholder="Contact Details" class="border p-2 rounded w-full" required>
+        <button type="submit" class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold md:col-span-2">Register Customer</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="space-y-6">
+    {% for customer in customers %}
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+        <div class="bg-gray-50 p-4 border-b flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">{{ customer.name }}</h3>
+                <p class="text-sm text-gray-500">{{ customer.contact }}</p>
+            </div>
+            {% if current_user.role == 'admin' %}
+            <button onclick="document.getElementById('pay-form-{{ customer.id }}').classList.toggle('hidden')" class="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold hover:bg-green-700">Add Payment Record</button>
+            {% endif %}
+        </div>
+        
+        {% if current_user.role == 'admin' %}
+        <div id="pay-form-{{ customer.id }}" class="hidden p-4 bg-green-50 border-b">
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <input type="hidden" name="action" value="add_payment">
+                <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                <input type="number" name="amount" placeholder="Amount" class="border p-2 rounded text-sm" required>
+                <select name="status" class="border p-2 rounded text-sm" required>
+                    <option value="Released">Released</option>
+                    <option value="Pending">Pending</option>
+                </select>
+                <input type="text" name="reason" placeholder="Reason if pending" class="border p-2 rounded text-sm md:col-span-1">
+                <button type="submit" class="bg-green-600 text-white p-2 rounded text-sm font-bold">Save</button>
+            </form>
+        </div>
+        {% endif %}
+        
+        <div class="p-4">
+            <h4 class="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Payment Release History</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="text-gray-400 border-b">
+                            <th class="pb-2">Date</th>
+                            <th class="pb-2">Amount</th>
+                            <th class="pb-2">Status</th>
+                            <th class="pb-2">Details / Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pay in customer.payment_history|reverse %}
+                        <tr class="border-b last:border-0">
+                            <td class="py-2 text-gray-600">{{ pay.date }}</td>
+                            <td class="py-2 font-bold text-gray-800">${{ pay.amount }}</td>
+                            <td class="py-2">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold {% if pay.status == 'Released' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                                    {{ pay.status }}
+                                </span>
+                            </td>
+                            <td class="py-2 text-gray-500 italic">{{ pay.reason if pay.status == 'Pending' else 'Payment released' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="py-4 text-center text-gray-400">No payment history available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white p-8 text-center rounded-lg border border-dashed border-gray-300">
+        <p class="text-gray-500">No customers registered yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

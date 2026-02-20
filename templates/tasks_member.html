@@ -2,8 +2,8 @@
 {% block content %}
 <h1 class="text-3xl font-bold mb-6">My Tasks</h1>
 
-<div class="bg-white p-6 rounded-lg shadow-sm mb-8">
-    <h2 class="text-xl font-bold mb-4">Add New Task</h2>
+<div class="bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
+    <h2 class="text-xl font-bold mb-4 text-gray-800">Add New Task</h2>
     <form method="POST" class="grid grid-cols-1 gap-4">
         <input type="hidden" name="action" value="add">
         <input type="text" name="title" placeholder="Task Title" class="border p-2 rounded" required>
@@ -14,7 +14,7 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for task in tasks|reverse %}
-    <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200 flex flex-col">
+    <div class="bg-white rounded-lg shadow-sm p-5 border border-gray-200 flex flex-col hover:shadow-md transition">
         <div class="flex justify-between items-start mb-4">
             <h3 class="font-bold text-lg text-gray-800">{{ task.title }}</h3>
             <span class="px-2 py-1 text-xs font-bold rounded-full 
@@ -24,6 +24,9 @@
                 {{ task.status }}
             </span>
         </div>
+        {% if task.assigned_by and task.assigned_by != current_user.username %}
+        <p class="text-xs font-bold text-purple-600 mb-2 italic">Assigned by Admin</p>
+        {% endif %}
         <p class="text-gray-600 text-sm mb-6 flex-1">{{ task.description }}</p>
         
         <div class="mt-auto border-t pt-4">
@@ -45,7 +48,7 @@
         </div>
     </div>
     {% else %}
-    <p class="text-gray-500 col-span-3 text-center py-8 bg-white rounded shadow-sm">No tasks added yet.</p>
+    <p class="text-gray-500 col-span-3 text-center py-8 bg-white rounded shadow-sm border border-dashed border-gray-300">No tasks added yet.</p>
     {% endfor %}
 </div>
 {% endblock %}

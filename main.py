@@ -27,15 +27,21 @@ app.secret_key = os.environ.get('SESSION_SECRET', 'super_secret_key')
 if "users" not in db: db["users"] = {}
 if "attendance" not in db: db["attendance"] = []
 if "tasks" not in db: db["tasks"] = []
-if "payments" not in db: db["payments"] = []
 if "departments" not in db: db["departments"] = ["Designers", "Menu Upload", "Finance", "Customer Handling"]
+if "customers" not in db: db["customers"] = []
+if "notices" not in db: db["notices"] = []
 
 @app.context_processor
 def inject_user():
     user = None
+    notifications = []
     if 'username' in session:
-        user = dict(db["users"]).get(session['username'])
-    return dict(current_user=user)
+        users = dict(db["users"])
+        user = users.get(session['username'])
+        if user:
+            notices = list(db["notices"])
+            notifications = [n for n in notices if n['target'] == 'all' or n['target'] == session['username']]
+    return dict(current_user=user, notifications=notifications)
 
 def login_required(f):
     def wrap(*args, **kwargs):
@@ -188,11 +194,15 @@ def tasks():
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'add':
+            assigned_to = request.form.get('assigned_to', u)
             tasks_list.append({
-                "id": str(uuid.uuid4()), "username": u,
+                "id": str(uuid.uuid4()), 
+                "username": assigned_to,
+                "assigned_by": u if user['role'] == 'admin' else u,
                 "title": request.form.get('title'),
                 "description": request.form.get('description'),
-                "status": "Pending"
+                "status": "Pending",
+                "date": datetime.now().strftime("%Y-%m-%d %H:%M")
             })
         elif action == 'update':
             t_id = request.form.get('id')
@@ -216,32 +226,64 @@ def tasks():
     
     return render_template('tasks_member.html', tasks=[t for t in tasks_list if t['username'] == u])
 
-@app.route('/payments', methods=['GET', 'POST'])
+@app.route('/customers', methods=['GET', 'POST'])
 @login_required
-def payments():
+def customers():
     users = dict(db["users"])
     user = users.get(session['username'])
-    pay_list = list(db["payments"])
+    customer_list = list(db["customers"])
     
     if request.method == 'POST' and user['role'] == 'admin':
         action = request.form.get('action')
         if action == 'add':
-            pay_list.append({
-                "id": str(uuid.uuid4()), "username": request.form.get('username'),
-                "amount": request.form.get('amount'), "status": request.form.get('status'),
-                "reason": request.form.get('reason', ''), "date": request.form.get('date', datetime.now().strftime("%Y-%m-%d"))
+            customer_list.append({
+                "id": str(uuid.uuid4()),
+                "name": request.form.get('name'),
+                "contact": request.form.get('contact'),
+                "payment_history": []
             })
-        elif action == 'update':
-            for p in pay_list:
-                if p['id'] == request.form.get('id'):
-                    p['status'] = request.form.get('status')
-                    p['reason'] = request.form.get('reason', '')
-        db["payments"] = pay_list
-        return redirect(url_for('payments'))
+        elif action == 'add_payment':
+            c_id = request.form.get('customer_id')
+            for c in customer_list:
+                if c['id'] == c_id:
+                    c['payment_history'].append({
+                        "id": str(uuid.uuid4()),
+                        "date": request.form.get('date', datetime.now().strftime("%Y-%m-%d")),
+                        "amount": request.form.get('amount'),
+                        "status": request.form.get('status'), # 'Released' or 'Pending'
+                        "reason": request.form.get('reason', '')
+                    })
+        db["customers"] = customer_list
+        return redirect(url_for('customers'))
         
-    if user['role'] == 'admin':
-        return render_template('payments_admin.html', payments=pay_list, users=users.values())
-    return render_template('payments_member.html', payments=[p for p in pay_list if p['username'] == user['username']])
+    return render_template('customers.html', customers=customer_list)
+
+@app.route('/notices', methods=['GET', 'POST'])
+@login_required
+def notices():
+    users = dict(db["users"])
+    user = users.get(session['username'])
+    notice_list = list(db["notices"])
+    
+    if request.method == 'POST' and user['role'] == 'admin':
+        action = request.form.get('action')
+        if action == 'send':
+            target = request.form.get('target') # 'all' or specific username
+            notice_list.append({
+                "id": str(uuid.uuid4()),
+                "title": request.form.get('title'),
+                "message": request.form.get('message'),
+                "target": target,
+                "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "sender": session['username']
+            })
+            db["notices"] = notice_list
+            flash("Notice sent successfully")
+            return redirect(url_for('notices'))
+            
+    # For members, we show relevant notices in notifications, but they can see history here too
+    visible_notices = [n for n in notice_list if n['target'] == 'all' or n['target'] == session['username'] or user['role'] == 'admin']
+    return render_template('notices.html', notices=visible_notices, users=users.values())
 
 @app.route('/departments', methods=['GET', 'POST'])
 @login_required
