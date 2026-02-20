@@ -14,11 +14,15 @@ except ImportError:
             self.filename = filename
             if os.path.exists(self.filename):
                 with open(self.filename, 'r') as f:
-                    self.update(json.load(f))
+                    try:
+                        data = json.load(f)
+                        self.update(data)
+                    except json.JSONDecodeError:
+                        pass
         def __setitem__(self, key, value):
             super().__setitem__(key, value)
             with open(self.filename, 'w') as f:
-                json.dump(self, f)
+                json.dump(dict(self), f)
     db = LocalDB()
 
 app = Flask(__name__)
@@ -71,27 +75,31 @@ def index():
 def setup():
     if db["users"]: return redirect(url_for('login'))
     if request.method == 'POST':
-        users = dict(db["users"])
-        users[request.form['username']] = {
-            "username": request.form['username'],
-            "password": generate_password_hash(request.form['password']),
-            "role": "admin",
-            "department": "Admin",
-            "contact": "",
-            "profile_image": ""
-        }
-        db["users"] = users
-        flash("Admin created. Please login.")
-        return redirect(url_for('login'))
+        u = request.form.get('username')
+        p = request.form.get('password')
+        if u and p:
+            users = dict(db["users"])
+            users[u] = {
+                "username": u,
+                "password": generate_password_hash(p),
+                "role": "admin",
+                "department": "Admin",
+                "contact": "",
+                "profile_image": ""
+            }
+            db["users"] = users
+            flash("Admin created. Please login.")
+            return redirect(url_for('login'))
     return render_template('setup.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if not db["users"]: return redirect(url_for('setup'))
     if request.method == 'POST':
-        u = request.form['username']
+        u = request.form.get('username')
+        p = request.form.get('password')
         users = dict(db["users"])
-        if u in users and check_password_hash(users[u]['password'], request.form['password']):
+        if u and p and u in users and check_password_hash(users[u]['password'], p):
             session['username'] = u
             return redirect(url_for('index'))
         flash("Invalid credentials")
@@ -122,19 +130,23 @@ def manage_users():
     if request.method == 'POST':
         action = request.form.get('action')
         u = request.form.get('username')
-        if action == 'add' and u not in users:
-            users[u] = {
-                "username": u,
-                "password": generate_password_hash(request.form.get('password')),
-                "role": request.form.get('role'),
-                "department": request.form.get('department'),
-                "contact": "",
-                "profile_image": ""
-            }
-        elif action == 'delete' and u in users and users[u]['role'] != 'admin':
+        if action == 'add' and u and u not in users:
+            p = request.form.get('password')
+            if p:
+                users[u] = {
+                    "username": u,
+                    "password": generate_password_hash(p),
+                    "role": request.form.get('role', 'member'),
+                    "department": request.form.get('department', 'Designers'),
+                    "contact": "",
+                    "profile_image": ""
+                }
+        elif action == 'delete' and u and u in users and users[u]['role'] != 'admin':
             del users[u]
-        elif action == 'reset_password' and u in users:
-            users[u]['password'] = generate_password_hash(request.form.get('password'))
+        elif action == 'reset_password' and u and u in users:
+            p = request.form.get('password')
+            if p:
+                users[u]['password'] = generate_password_hash(p)
         db["users"] = users
         return redirect(url_for('manage_users'))
     return render_template('users.html', users=users.values(), departments=departments)
@@ -145,6 +157,8 @@ def attendance():
     u = session['username']
     users = dict(db["users"])
     user = users.get(u)
+    if not user: return redirect(url_for('logout'))
+    
     records = list(db["attendance"])
     departments = list(db["departments"])
     
@@ -188,6 +202,8 @@ def tasks():
     u = session['username']
     users = dict(db["users"])
     user = users.get(u)
+    if not user: return redirect(url_for('logout'))
+    
     tasks_list = list(db["tasks"])
     departments = list(db["departments"])
     
@@ -199,8 +215,8 @@ def tasks():
                 "id": str(uuid.uuid4()), 
                 "username": assigned_to,
                 "assigned_by": u if user['role'] == 'admin' else u,
-                "title": request.form.get('title'),
-                "description": request.form.get('description'),
+                "title": request.form.get('title', 'Untitled'),
+                "description": request.form.get('description', ''),
                 "status": "Pending",
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M")
             })
@@ -208,7 +224,7 @@ def tasks():
             t_id = request.form.get('id')
             for t in tasks_list:
                 if t['id'] == t_id and (user['role'] == 'admin' or t['username'] == u):
-                    t['status'] = request.form.get('status')
+                    t['status'] = request.form.get('status', 'Pending')
         elif action == 'delete':
             tasks_list = [t for t in tasks_list if not (t['id'] == request.form.get('id') and (user['role'] == 'admin' or t['username'] == u))]
         db["tasks"] = tasks_list
@@ -231,6 +247,8 @@ def tasks():
 def customers():
     users = dict(db["users"])
     user = users.get(session['username'])
+    if not user: return redirect(url_for('logout'))
+    
     customer_list = list(db["customers"])
     
     if request.method == 'POST' and user['role'] == 'admin':
@@ -238,8 +256,8 @@ def customers():
         if action == 'add':
             customer_list.append({
                 "id": str(uuid.uuid4()),
-                "name": request.form.get('name'),
-                "contact": request.form.get('contact'),
+                "name": request.form.get('name', 'Unknown'),
+                "contact": request.form.get('contact', ''),
                 "payment_history": []
             })
         elif action == 'add_payment':
@@ -249,8 +267,8 @@ def customers():
                     c['payment_history'].append({
                         "id": str(uuid.uuid4()),
                         "date": request.form.get('date', datetime.now().strftime("%Y-%m-%d")),
-                        "amount": request.form.get('amount'),
-                        "status": request.form.get('status'), # 'Released' or 'Pending'
+                        "amount": request.form.get('amount', '0'),
+                        "status": request.form.get('status', 'Pending'),
                         "reason": request.form.get('reason', '')
                     })
         db["customers"] = customer_list
@@ -263,16 +281,18 @@ def customers():
 def notices():
     users = dict(db["users"])
     user = users.get(session['username'])
+    if not user: return redirect(url_for('logout'))
+    
     notice_list = list(db["notices"])
     
     if request.method == 'POST' and user['role'] == 'admin':
         action = request.form.get('action')
         if action == 'send':
-            target = request.form.get('target') # 'all' or specific username
+            target = request.form.get('target', 'all')
             notice_list.append({
                 "id": str(uuid.uuid4()),
-                "title": request.form.get('title'),
-                "message": request.form.get('message'),
+                "title": request.form.get('title', 'Notification'),
+                "message": request.form.get('message', ''),
                 "target": target,
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "sender": session['username']
@@ -281,7 +301,6 @@ def notices():
             flash("Notice sent successfully")
             return redirect(url_for('notices'))
             
-    # For members, we show relevant notices in notifications, but they can see history here too
     visible_notices = [n for n in notice_list if n['target'] == 'all' or n['target'] == session['username'] or user['role'] == 'admin']
     return render_template('notices.html', notices=visible_notices, users=users.values())
 
@@ -305,6 +324,7 @@ def profile():
     users = dict(db["users"])
     u = session['username']
     user = users.get(u)
+    if not user: return redirect(url_for('logout'))
     
     if request.method == 'POST':
         user['contact'] = request.form.get('contact', '')
