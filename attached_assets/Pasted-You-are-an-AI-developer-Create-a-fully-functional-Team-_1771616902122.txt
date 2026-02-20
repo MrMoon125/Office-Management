@@ -1,0 +1,187 @@
+You are an AI developer. Create a fully functional **Team Management Web Dashboard** using **Python (Flask)** + **Replit DB** + **Tailwind CSS**, with 0 API keys and no AI features.  
+The entire system must run on Replit FREE plan and must be fully publishable as a normal Flask web app.
+
+I am a non-IT person.  
+Do NOT ask me anything.  
+Generate EVERYTHING automatically: backend code, HTML templates, CSS, JS, database logic, and file structure.
+
+=====================================================
+### ✅ SYSTEM REQUIREMENTS (ALL MUST BE INCLUDED)
+=====================================================
+
+1️⃣ **SYSTEM OVERVIEW**
+Build a modern web dashboard with:
+- User login (Admin + Members)
+- Attendance system
+- Task management system
+- Payment tracking module
+- Departments management
+- Profile management with image upload (Base64)
+
+Use:
+✔ Python Flask  
+✔ Replit DB (NO external API, NO Firebase, NO keys)  
+✔ Tailwind CSS for UI  
+✔ Jinja2 templates  
+✔ All data stored in Replit DB (JSON structures)
+
+=====================================================
+### ✅ USER ROLES
+=====================================================
+
+**Admin**
+- Full control
+- Add / edit / delete users
+- Reset passwords
+- Approve payments
+- See all attendance, tasks, payments
+
+**Member**
+- Login with username/password
+- Mark attendance (Check In / Check Out)
+- Add/edit own tasks
+- View payment status
+- Update profile
+
+=====================================================
+### ✅ LOGIN SYSTEM (NO EMAILS)
+=====================================================
+
+- First run: System auto-creates admin setup page
+- Admin sets username + password (stored hashed)
+- Admin can create new users with:
+  - Username
+  - Password
+  - Department
+  - Profile image (Base64)
+  - Role (admin or member)
+
+- Store users in Replit DB using:
+  db["users"] = {}
+
+=====================================================
+### ✅ ATTENDANCE MODULE
+=====================================================
+
+Members can:
+- Click “Mark Attendance”
+- Auto-save:
+  - Date
+  - Time-in
+  - Time-out
+  - Total hours
+
+Admin can:
+- Filter by date
+- Filter by member
+- Filter by department
+
+Attendance saved under:
+db["attendance"] = []
+
+=====================================================
+### ✅ TASK MANAGEMENT
+=====================================================
+
+Members:
+- Add/update their tasks
+- Fields:
+  - Title
+  - Description
+  - Status (Pending / In Progress / Completed)
+
+Admin:
+- Can view all tasks
+- Filter by:
+  - Member
+  - Department
+  - Status
+
+Tasks saved under:
+db["tasks"] = []
+
+=====================================================
+### ✅ PAYMENT MODULE
+=====================================================
+
+Admin:
+- Mark payment as Paid / Unpaid
+- Add reason if unpaid
+- View payment history
+
+Members:
+- See their payment status
+
+Stored under:
+db["payments"] = []
+
+=====================================================
+### ✅ DEPARTMENTS & PROFILES
+=====================================================
+
+Each user has:
+- Name
+- Department
+- Role
+- Contact
+- Profile image (Base64)
+
+Departments:
+- Designers
+- Menu Upload
+- Finance
+- Customer Handling
+- Ability to add more
+
+=====================================================
+### ✅ DASHBOARD UI
+=====================================================
+
+Use Tailwind CSS for:
+- Modern sidebar
+- Cards for stats
+- Tables
+- Mobile-friendly layout
+- Charts using Chart.js (no external backend)
+
+=====================================================
+### ✅ TECHNICAL RULES
+=====================================================
+
+- NO Firebase  
+- NO external API  
+- NO OpenAI  
+- NO Replit AI SDK  
+- NO paid features  
+- NO typescript  
+- Use ONLY Flask + HTML + Tailwind + JS + Replit DB  
+- Must be fully runnable after hitting the “Run” button  
+- Must include all files:
+  - main.py (Flask server)
+  - templates/
+  - static/css/
+  - static/js/
+  - static/images/
+  - Database using Replit DB
+
+=====================================================
+### FINAL OUTPUT
+=====================================================
+
+Your output MUST include:
+✔ Full project structure  
+✔ All Flask routes  
+✔ All HTML with Tailwind  
+✔ All JS logic  
+✔ Database models using Replit DB  
+✔ Authentication  
+✔ Admin panel  
+✔ Attendance module  
+✔ Tasks module  
+✔ Payments module  
+✔ Department list  
+✔ Profile system  
+✔ Instructions to run  
+✔ Fully functional ready-to-run system  
+
+Generate EVERYTHING now in one output.
