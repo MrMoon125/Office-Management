@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Welcome, {{ current_user.username }}</h1>
+<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+    <h3 class="text-lg font-bold mb-4">Quick Actions</h3>
+    <div class="flex flex-wrap gap-4">
+        <form action="/attendance" method="POST">
+            <input type="hidden" name="action" value="check_in">
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow font-bold">Mark Attendance (Check In)</button>
+        </form>
+        <form action="/attendance" method="POST">
+            <input type="hidden" name="action" value="check_out">
+            <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 shadow font-bold">Check Out</button>
+        </form>
+    </div>
+</div>
+<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+    <h3 class="text-lg font-bold mb-4">Navigation</h3>
+    <div class="flex flex-wrap gap-4">
+        <a href="/tasks" class="bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 font-semibold">My Tasks</a>
+        <a href="/payments" class="bg-purple-50 text-purple-600 px-4 py-2 rounded hover:bg-purple-100 font-semibold">My Payments</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Payment Tracking</h1>
+
+<div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+    <h2 class="text-xl font-bold mb-4">Record Payment</h2>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <input type="hidden" name="action" value="add">
+        <select name="username" class="border p-2 rounded lg:col-span-1" required>
+            <option value="">Select Member...</option>
+            {% for u in users %}
+            <option value="{{ u.username }}">{{ u.username }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="amount" placeholder="Amount ($)" class="border p-2 rounded lg:col-span-1" required>
+        <select name="status" class="border p-2 rounded lg:col-span-1" required>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+        </select>
+        <input type="text" name="reason" placeholder="Reason (if unpaid)" class="border p-2 rounded lg:col-span-2">
+        <button type="submit" class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 lg:col-span-1 font-bold">Add Record</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
+    <table class="w-full text-left border-collapse min-w-[700px]">
+        <thead>
+            <tr class="bg-gray-50 border-b">
+                <th class="p-4">Date</th>
+                <th class="p-4">Member</th>
+                <th class="p-4">Amount</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Reason</th>
+                <th class="p-4">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pay in payments|reverse %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4">{{ pay.date }}</td>
+                <td class="p-4 font-bold text-gray-800">{{ pay.username }}</td>
+                <td class="p-4 font-semibold">${{ pay.amount }}</td>
+                <td class="p-4">
+                    <span class="px-2 py-1 text-xs font-bold rounded-full {% if pay.status == 'Paid' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ pay.status }}
+                    </span>
+                </td>
+                <td class="p-4 text-sm text-gray-600">{{ pay.reason or '-' }}</td>
+                <td class="p-4">
+                    <form method="POST" class="flex gap-2 items-center">
+                        <input type="hidden" name="action" value="update">
+                        <input type="hidden" name="id" value="{{ pay.id }}">
+                        <select name="status" class="border p-1 text-sm rounded bg-gray-50">
+                            <option value="Paid" {% if pay.status == 'Paid' %}selected{% endif %}>Paid</option>
+                            <option value="Unpaid" {% if pay.status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                        </select>
+                        <input type="text" name="reason" value="{{ pay.reason }}" placeholder="Reason" class="border p-1 text-sm rounded w-24 bg-gray-50">
+                        <button type="submit" class="text-blue-600 hover:text-blue-800 text-sm font-bold">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="p-4 text-center text-gray-500">No payment records.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

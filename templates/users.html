@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Manage Users</h1>
+<div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+    <h2 class="text-xl font-bold mb-4">Add New User</h2>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="username" placeholder="Username" class="border p-2 rounded" required>
+        <input type="password" name="password" placeholder="Password" class="border p-2 rounded" required>
+        <select name="role" class="border p-2 rounded" required>
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+        </select>
+        <select name="department" class="border p-2 rounded" required>
+            {% for d in departments %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 md:col-span-2">Add User</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
+    <table class="w-full text-left border-collapse min-w-[600px]">
+        <thead>
+            <tr class="bg-gray-50 border-b">
+                <th class="p-4">Username</th>
+                <th class="p-4">Role</th>
+                <th class="p-4">Department</th>
+                <th class="p-4">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4 flex items-center space-x-3">
+                    {% if user.profile_image %}
+                        <img src="{{ user.profile_image }}" class="w-8 h-8 rounded-full object-cover">
+                    {% else %}
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">{{ user.username[0]|upper }}</div>
+                    {% endif %}
+                    <span class="font-semibold">{{ user.username }}</span>
+                </td>
+                <td class="p-4">{{ user.role|title }}</td>
+                <td class="p-4">{{ user.department }}</td>
+                <td class="p-4 flex space-x-2">
+                    <form method="POST" class="inline flex gap-2 items-center" onsubmit="return confirm('Reset password for {{ user.username }}?');">
+                        <input type="hidden" name="action" value="reset_password">
+                        <input type="hidden" name="username" value="{{ user.username }}">
+                        <input type="password" name="password" placeholder="New pass" class="border p-1 text-sm rounded w-24" required>
+                        <button type="submit" class="text-blue-600 hover:underline text-sm font-semibold">Reset</button>
+                    </form>
+                    {% if user.role != 'admin' %}
+                    <form method="POST" class="inline" onsubmit="return confirm('Delete user {{ user.username }}?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="username" value="{{ user.username }}">
+                        <button type="submit" class="text-red-600 hover:underline text-sm ml-2 font-semibold">Delete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">My Attendance</h1>
+<div class="bg-white p-6 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4">
+    <form method="POST">
+        <input type="hidden" name="action" value="check_in">
+        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 shadow font-bold w-full md:w-auto">Check In Now</button>
+    </form>
+    <form method="POST">
+        <input type="hidden" name="action" value="check_out">
+        <button type="submit" class="bg-yellow-500 text-white px-6 py-3 rounded hover:bg-yellow-600 shadow font-bold w-full md:w-auto">Check Out</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
+    <table class="w-full text-left border-collapse min-w-[500px]">
+        <thead>
+            <tr class="bg-gray-50 border-b">
+                <th class="p-4">Date</th>
+                <th class="p-4">Time In</th>
+                <th class="p-4">Time Out</th>
+                <th class="p-4">Total Hours</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records|reverse %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4">{{ record.date }}</td>
+                <td class="p-4">{{ record.time_in }}</td>
+                <td class="p-4">{{ record.time_out or 'Not checked out' }}</td>
+                <td class="p-4 font-bold">{{ record.total_hours }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="p-4 text-center text-gray-500">No records yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

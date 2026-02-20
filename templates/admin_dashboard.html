@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h3 class="text-gray-500 font-semibold mb-2">Total Users</h3>
+        <p class="text-4xl font-bold text-gray-800">{{ users_count }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h3 class="text-gray-500 font-semibold mb-2">Total Tasks</h3>
+        <p class="text-4xl font-bold text-gray-800">{{ tasks_count }}</p>
+    </div>
+</div>
+<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+    <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+    <div class="flex flex-wrap gap-4">
+        <a href="/users" class="bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 font-semibold">Manage Users</a>
+        <a href="/attendance" class="bg-green-50 text-green-600 px-4 py-2 rounded hover:bg-green-100 font-semibold">View Attendance</a>
+        <a href="/tasks" class="bg-purple-50 text-purple-600 px-4 py-2 rounded hover:bg-purple-100 font-semibold">Manage Tasks</a>
+    </div>
+</div>
+{% endblock %}

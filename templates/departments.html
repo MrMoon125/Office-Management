@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Manage Departments</h1>
+
+<div class="bg-white p-6 rounded-lg shadow-sm mb-8 max-w-md border border-gray-100">
+    <h2 class="text-xl font-bold mb-4">Add Department</h2>
+    <form method="POST" class="flex gap-3">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="department" placeholder="Department Name" class="border p-2 rounded flex-1" required>
+        <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 font-bold">Add</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm overflow-hidden max-w-2xl border border-gray-100">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-gray-50 border-b">
+                <th class="p-4 font-semibold text-gray-700">Department Name</th>
+                <th class="p-4 w-24 font-semibold text-gray-700">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in departments %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4 font-medium text-gray-800">{{ d }}</td>
+                <td class="p-4">
+                    <form method="POST" onsubmit="return confirm('Delete department?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="department" value="{{ d }}">
+                        <button type="submit" class="text-red-500 hover:text-red-700 font-semibold text-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
