@@ -67,7 +67,9 @@ def index():
     if not db["users"]: return redirect(url_for('setup'))
     if 'username' in session:
         user = dict(db["users"]).get(session['username'])
-        if user and user.get('role') == 'admin': return redirect(url_for('admin_dashboard'))
+        if not user: return redirect(url_for('logout'))
+        if user.get('role') == 'admin': return redirect(url_for('admin_dashboard'))
+        if user.get('role') == 'leader': return redirect(url_for('leader_dashboard'))
         return redirect(url_for('member_dashboard'))
     return redirect(url_for('login'))
 
@@ -115,6 +117,16 @@ def logout():
 @admin_required
 def admin_dashboard():
     return render_template('admin_dashboard.html', users_count=len(db["users"]), tasks_count=len(db["tasks"]))
+
+@app.route('/leader')
+@login_required
+def leader_dashboard():
+    u = session['username']
+    user = dict(db["users"]).get(u)
+    if not user or user['role'] != 'leader': return redirect(url_for('index'))
+    dept = user.get('department')
+    dept_users = [usr for usr in dict(db["users"]).values() if usr.get('department') == dept]
+    return render_template('leader_dashboard.html', dept_users=dept_users, dept=dept)
 
 @app.route('/member')
 @login_required
@@ -184,7 +196,7 @@ def attendance():
             db["attendance"] = records
         return redirect(url_for('attendance'))
         
-    if user['role'] == 'admin':
+    if user['role'] in ['admin', 'leader']:
         f_date, f_user, f_dept = request.args.get('date'), request.args.get('member'), request.args.get('department')
         filtered = records
         if f_date: filtered = [r for r in filtered if r['date'] == f_date]
@@ -192,6 +204,10 @@ def attendance():
         if f_dept: 
             dept_users = [usr['username'] for usr in users.values() if usr.get('department') == f_dept]
             filtered = [r for r in filtered if r['username'] in dept_users]
+        elif user['role'] == 'leader':
+            dept_users = [usr['username'] for usr in users.values() if usr.get('department') == user.get('department')]
+            filtered = [r for r in filtered if r['username'] in dept_users]
+            
         return render_template('attendance_admin.html', records=filtered, users=users.values(), departments=departments)
     
     return render_template('attendance_member.html', records=[r for r in records if r['username'] == u])
@@ -214,7 +230,7 @@ def tasks():
             tasks_list.append({
                 "id": str(uuid.uuid4()), 
                 "username": assigned_to,
-                "assigned_by": u if user['role'] == 'admin' else u,
+                "assigned_by": u,
                 "title": request.form.get('title', 'Untitled'),
                 "description": request.form.get('description', ''),
                 "status": "Pending",
@@ -223,14 +239,14 @@ def tasks():
         elif action == 'update':
             t_id = request.form.get('id')
             for t in tasks_list:
-                if t['id'] == t_id and (user['role'] == 'admin' or t['username'] == u):
+                if t['id'] == t_id and (user['role'] == 'admin' or t['username'] == u or user['role'] == 'leader'):
                     t['status'] = request.form.get('status', 'Pending')
         elif action == 'delete':
             tasks_list = [t for t in tasks_list if not (t['id'] == request.form.get('id') and (user['role'] == 'admin' or t['username'] == u))]
         db["tasks"] = tasks_list
         return redirect(url_for('tasks'))
         
-    if user['role'] == 'admin':
+    if user['role'] in ['admin', 'leader']:
         f_user, f_dept, f_status = request.args.get('member'), request.args.get('department'), request.args.get('status')
         filtered = tasks_list
         if f_user: filtered = [t for t in filtered if t['username'] == f_user]
@@ -238,6 +254,10 @@ def tasks():
         if f_dept:
             dept_users = [usr['username'] for usr in users.values() if usr.get('department') == f_dept]
             filtered = [t for t in filtered if t['username'] in dept_users]
+        elif user['role'] == 'leader':
+            dept_users = [usr['username'] for usr in users.values() if usr.get('department') == user.get('department')]
+            filtered = [t for t in filtered if t['username'] in dept_users]
+            
         return render_template('tasks_admin.html', tasks=filtered, users=users.values(), departments=departments)
     
     return render_template('tasks_member.html', tasks=[t for t in tasks_list if t['username'] == u])
@@ -257,20 +277,29 @@ def customers():
             customer_list.append({
                 "id": str(uuid.uuid4()),
                 "name": request.form.get('name', 'Unknown'),
+                "website": request.form.get('website', ''),
                 "contact": request.form.get('contact', ''),
-                "payment_history": []
+                "weekly_payments": [],
+                "invoices": []
             })
-        elif action == 'add_payment':
+        elif action == 'update_payment':
             c_id = request.form.get('customer_id')
+            week = request.form.get('week')
+            status = request.form.get('status')
             for c in customer_list:
                 if c['id'] == c_id:
-                    c['payment_history'].append({
-                        "id": str(uuid.uuid4()),
-                        "date": request.form.get('date', datetime.now().strftime("%Y-%m-%d")),
-                        "amount": request.form.get('amount', '0'),
-                        "status": request.form.get('status', 'Pending'),
-                        "reason": request.form.get('reason', '')
-                    })
+                    # Remove existing entry for same week if any
+                    c['weekly_payments'] = [p for p in c['weekly_payments'] if p['week'] != week]
+                    c['weekly_payments'].append({"week": week, "status": status})
+        elif action == 'update_invoice':
+            c_id = request.form.get('customer_id')
+            week = request.form.get('week')
+            status = request.form.get('status') # 'Sent' or 'Not Sent'
+            reason = request.form.get('reason', '')
+            for c in customer_list:
+                if c['id'] == c_id:
+                    c['invoices'] = [i for i in c['invoices'] if i['week'] != week]
+                    c['invoices'].append({"week": week, "status": status, "reason": reason})
         db["customers"] = customer_list
         return redirect(url_for('customers'))
         

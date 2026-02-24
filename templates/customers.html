@@ -8,76 +8,117 @@
     <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input type="hidden" name="action" value="add">
         <input type="text" name="name" placeholder="Customer Name" class="border p-2 rounded w-full" required>
-        <input type="text" name="contact" placeholder="Contact Details" class="border p-2 rounded w-full" required>
-        <button type="submit" class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold md:col-span-2">Register Customer</button>
+        <input type="text" name="website" placeholder="Website Link" class="border p-2 rounded w-full" required>
+        <input type="text" name="contact" placeholder="Contact Person / Phone" class="border p-2 rounded w-full" required>
+        <button type="submit" class="bg-red-600 text-white py-2 rounded hover:bg-red-700 font-bold md:col-span-2">Register Customer</button>
     </form>
 </div>
 {% endif %}
 
-<div class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for customer in customers %}
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
-        <div class="bg-gray-50 p-4 border-b flex justify-between items-center">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 flex flex-col">
+        <div class="p-5 border-b bg-gray-50 flex justify-between items-start">
             <div>
                 <h3 class="text-lg font-bold text-gray-800">{{ customer.name }}</h3>
-                <p class="text-sm text-gray-500">{{ customer.contact }}</p>
+                <a href="{{ customer.website }}" target="_blank" class="text-sm text-blue-600 hover:underline">{{ customer.website }}</a>
+                <p class="text-xs text-gray-400 mt-1">Contact: {{ customer.contact }}</p>
             </div>
-            {% if current_user.role == 'admin' %}
-            <button onclick="document.getElementById('pay-form-{{ customer.id }}').classList.toggle('hidden')" class="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold hover:bg-green-700">Add Payment Record</button>
-            {% endif %}
+            <button onclick="document.getElementById('profile-{{ customer.id }}').classList.toggle('hidden')" class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+            </button>
         </div>
         
-        {% if current_user.role == 'admin' %}
-        <div id="pay-form-{{ customer.id }}" class="hidden p-4 bg-green-50 border-b">
-            <form method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input type="hidden" name="action" value="add_payment">
-                <input type="hidden" name="customer_id" value="{{ customer.id }}">
-                <input type="number" name="amount" placeholder="Amount" class="border p-2 rounded text-sm" required>
-                <select name="status" class="border p-2 rounded text-sm" required>
-                    <option value="Released">Released</option>
-                    <option value="Pending">Pending</option>
-                </select>
-                <input type="text" name="reason" placeholder="Reason if pending" class="border p-2 rounded text-sm md:col-span-1">
-                <button type="submit" class="bg-green-600 text-white p-2 rounded text-sm font-bold">Save</button>
-            </form>
-        </div>
-        {% endif %}
-        
-        <div class="p-4">
-            <h4 class="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Payment Release History</h4>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="text-gray-400 border-b">
-                            <th class="pb-2">Date</th>
-                            <th class="pb-2">Amount</th>
-                            <th class="pb-2">Status</th>
-                            <th class="pb-2">Details / Reason</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pay in customer.payment_history|reverse %}
-                        <tr class="border-b last:border-0">
-                            <td class="py-2 text-gray-600">{{ pay.date }}</td>
-                            <td class="py-2 font-bold text-gray-800">${{ pay.amount }}</td>
-                            <td class="py-2">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-bold {% if pay.status == 'Released' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
-                                    {{ pay.status }}
-                                </span>
-                            </td>
-                            <td class="py-2 text-gray-500 italic">{{ pay.reason if pay.status == 'Pending' else 'Payment released' }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="4" class="py-4 text-center text-gray-400">No payment history available.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div id="profile-{{ customer.id }}" class="p-5 space-y-6 bg-white flex-1">
+            <!-- Weekly Payments -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Weekly Payments</h4>
+                    {% if current_user.role == 'admin' %}
+                    <button onclick="document.getElementById('pay-modal-{{ customer.id }}').classList.toggle('hidden')" class="text-xs text-red-600 font-bold hover:underline">+ Update</button>
+                    {% endif %}
+                </div>
+                
+                <div id="pay-modal-{{ customer.id }}" class="hidden mb-4 p-3 bg-gray-50 rounded border text-sm">
+                    <form method="POST" class="space-y-2">
+                        <input type="hidden" name="action" value="update_payment">
+                        <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                        <input type="text" name="week" placeholder="e.g. Week 1, Feb" class="w-full p-1 border rounded" required>
+                        <select name="status" class="w-full p-1 border rounded">
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                        <button type="submit" class="w-full bg-red-600 text-white py-1 rounded text-xs font-bold">Save</button>
+                    </form>
+                </div>
+
+                <div class="space-y-2">
+                    {% for p in customer.weekly_payments %}
+                    <div class="flex justify-between items-center text-sm p-2 rounded bg-gray-50">
+                        <span class="font-medium text-gray-700">{{ p.week }}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {% if p.status == 'Paid' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">{{ p.status }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-gray-400 italic">No payment status recorded.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Invoices -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Invoices</h4>
+                    {% if current_user.role == 'admin' %}
+                    <button onclick="document.getElementById('inv-modal-{{ customer.id }}').classList.toggle('hidden')" class="text-xs text-red-600 font-bold hover:underline">+ Update</button>
+                    {% endif %}
+                </div>
+
+                <div id="inv-modal-{{ customer.id }}" class="hidden mb-4 p-3 bg-gray-50 rounded border text-sm">
+                    <form method="POST" class="space-y-2">
+                        <input type="hidden" name="action" value="update_invoice">
+                        <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                        <input type="text" name="week" placeholder="For week..." class="w-full p-1 border rounded" required>
+                        <select name="status" class="w-full p-1 border rounded" onchange="this.nextElementSibling.classList.toggle('hidden', this.value === 'Sent')">
+                            <option value="Sent">Sent</option>
+                            <option value="Not Sent">Not Sent</option>
+                        </select>
+                        <input type="text" name="reason" placeholder="Reason if not sent" class="w-full p-1 border rounded hidden">
+                        <button type="submit" class="w-full bg-red-600 text-white py-1 rounded text-xs font-bold">Save</button>
+                    </form>
+                </div>
+
+                <div class="space-y-2">
+                    {% for i in customer.invoices %}
+                    <div class="p-2 rounded bg-gray-50 text-sm">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-medium text-gray-700">{{ i.week }}</span>
+                            <div class="flex items-center space-x-1">
+                                {% if i.status == 'Sent' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="text-[10px] font-bold text-green-700 uppercase">Sent</span>
+                                {% else %}
+                                <span class="text-[10px] font-bold text-red-700 uppercase">Not Sent</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if i.status == 'Not Sent' and i.reason %}
+                        <p class="text-[10px] text-gray-400 italic">Reason: {{ i.reason }}</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-gray-400 italic">No invoice status recorded.</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="bg-white p-8 text-center rounded-lg border border-dashed border-gray-300">
-        <p class="text-gray-500">No customers registered yet.</p>
+    <div class="bg-white p-12 text-center rounded-xl border border-dashed border-gray-300 col-span-full">
+        <p class="text-gray-400">No customers registered in the system.</p>
     </div>
     {% endfor %}
 </div>

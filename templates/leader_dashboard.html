@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-2">Team Overview</h1>
+<p class="text-gray-500 mb-8">Managing department: <span class="font-bold text-red-600">{{ dept }}</span></p>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Staff List -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+            <h2 class="font-bold text-gray-800 uppercase tracking-wider text-sm">Team Members</h2>
+            <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">{{ dept_users|length }} Staff</span>
+        </div>
+        <div class="divide-y">
+            {% for u in dept_users %}
+            <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                <div class="flex items-center space-x-3">
+                    {% if u.profile_image %}
+                        <img src="{{ u.profile_image }}" class="w-10 h-10 rounded-full object-cover">
+                    {% else %}
+                        <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center font-bold">{{ u.username[0]|upper }}</div>
+                    {% endif %}
+                    <div>
+                        <p class="font-bold text-gray-800">@{{ u.username }}</p>
+                        <p class="text-xs text-gray-400">{{ u.role|title }}</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="/attendance?member={{ u.username }}" class="text-xs font-bold text-blue-600 hover:underline">Attendance</a>
+                    <span class="text-gray-200">|</span>
+                    <a href="/tasks?member={{ u.username }}" class="text-xs font-bold text-blue-600 hover:underline">Monitor Tasks</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Dept Quick Stats -->
+    <div class="space-y-6">
+        <div class="bg-red-600 p-8 rounded-xl text-white shadow-lg shadow-red-100">
+            <h3 class="text-lg font-bold mb-4">Department Notice</h3>
+            <p class="text-red-100 text-sm leading-relaxed mb-6">As a Team Leader, you can monitor the attendance and task progress of everyone in the {{ dept }} department. Ensure all tasks are updated daily.</p>
+            <div class="flex gap-4">
+                <a href="/tasks" class="bg-white text-red-600 px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-red-50">Manage Tasks</a>
+                <a href="/attendance" class="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-800">View Attendance</a>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-4 uppercase tracking-wider text-xs text-gray-500">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="/notices" class="p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition border border-blue-100">
+                    <p class="font-bold text-blue-800 text-sm">Notices</p>
+                    <p class="text-[10px] text-blue-600">Broadcast updates</p>
+                </a>
+                <a href="/profile" class="p-4 rounded-lg bg-green-50 hover:bg-green-100 transition border border-green-100">
+                    <p class="font-bold text-green-800 text-sm">Profile</p>
+                    <p class="text-[10px] text-green-600">Update account</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

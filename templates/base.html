@@ -12,12 +12,17 @@
         {% if current_user %}
         <!-- Sidebar -->
         <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
-            <div class="p-4 text-2xl font-bold border-b border-gray-800">TeamSpace</div>
+            <div class="p-4 flex flex-col items-center border-b border-gray-800 space-y-2">
+                <img src="/static/images/logo.png" alt="Foodinn" class="w-12 h-12 object-contain brightness-0 invert">
+                <span class="text-2xl font-black italic tracking-tighter">foodinn</span>
+            </div>
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                 {% if current_user.role == 'admin' %}
                     <a href="/admin" class="block py-2 px-4 rounded hover:bg-gray-800">Dashboard</a>
                     <a href="/users" class="block py-2 px-4 rounded hover:bg-gray-800">Users</a>
                     <a href="/departments" class="block py-2 px-4 rounded hover:bg-gray-800">Departments</a>
+                {% elif current_user.role == 'leader' %}
+                    <a href="/leader" class="block py-2 px-4 rounded hover:bg-gray-800 font-bold">Leader Board</a>
                 {% else %}
                     <a href="/member" class="block py-2 px-4 rounded hover:bg-gray-800">Dashboard</a>
                 {% endif %}
