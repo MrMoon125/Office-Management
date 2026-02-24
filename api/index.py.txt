@@ -1,0 +1,7 @@
+import os
+from main import app as _app
+
+_app.template_folder = os.path.join(os.path.dirname(__file__), "..", "templates")
+_app.static_folder = os.path.join(os.path.dirname(__file__), "..", "static")
+
+app = _app
