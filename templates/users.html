@@ -1,63 +1,119 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Manage Users</h1>
-<div class="bg-white p-6 rounded-lg shadow-sm mb-8">
-    <h2 class="text-xl font-bold mb-4">Add New User</h2>
-    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="mb-12">
+    <h1 class="text-4xl font-black text-gray-900 mb-2">Workspace Directory</h1>
+    <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Access control & staff matrix</p>
+</div>
+
+<div class="bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 mb-12">
+    <h2 class="text-xl font-black mb-8 text-gray-900 tracking-tight">Onboard New Staff</h2>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <input type="hidden" name="action" value="add">
-        <input type="text" name="username" placeholder="Username" class="border p-2 rounded" required>
-        <input type="password" name="password" placeholder="Password" class="border p-2 rounded" required>
-        <select name="role" class="border p-2 rounded" required>
-            <option value="member">Member</option>
-            <option value="leader">Team Leader</option>
-            <option value="admin">Admin</option>
-        </select>
-        <select name="department" class="border p-2 rounded" required>
-            {% for d in departments %}
-            <option value="{{ d }}">{{ d }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 md:col-span-2">Add User</button>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Identity Tag</label>
+            <input type="text" name="username" placeholder="Username" class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600" required>
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Access Key</label>
+            <input type="password" name="password" placeholder="Password" class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600" required>
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Security Clearance</label>
+            <select name="role" class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600">
+                <option value="member">Standard Member</option>
+                <option value="leader">Team Leader</option>
+                <option value="admin">System Admin</option>
+            </select>
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Station / Department</label>
+            <select name="department" class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600">
+                {% for d in departments %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="bg-red-600 text-white font-black py-4 rounded-2xl hover:bg-red-700 transition lg:col-span-4 shadow-xl shadow-red-100">Initialize Staff Credentials</button>
     </form>
 </div>
 
-<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
-    <table class="w-full text-left border-collapse min-w-[600px]">
+<div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
+    <table class="w-full text-left border-collapse">
         <thead>
-            <tr class="bg-gray-50 border-b">
-                <th class="p-4">Username</th>
-                <th class="p-4">Role</th>
-                <th class="p-4">Department</th>
-                <th class="p-4">Actions</th>
+            <tr class="bg-gray-50/50 border-b">
+                <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Profile</th>
+                <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Clearance</th>
+                <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Departmental Permissions</th>
+                <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operations</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-gray-50">
             {% for user in users %}
-            <tr class="border-b hover:bg-gray-50">
-                <td class="p-4 flex items-center space-x-3">
-                    {% if user.profile_image %}
-                        <img src="{{ user.profile_image }}" class="w-8 h-8 rounded-full object-cover">
-                    {% else %}
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">{{ user.username[0]|upper }}</div>
-                    {% endif %}
-                    <span class="font-semibold">{{ user.username }}</span>
+            <tr class="hover:bg-gray-50/30 transition">
+                <td class="p-8">
+                    <div class="flex items-center space-x-4">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image }}" class="w-12 h-12 rounded-2xl object-cover shadow-sm ring-2 ring-red-50">
+                        {% else %}
+                            <div class="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-gray-400 uppercase text-xl">{{ user.username[0] }}</div>
+                        {% endif %}
+                        <div>
+                            <p class="font-black text-gray-900 tracking-tight">@{{ user.username }}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">ID: {{ user.username[:4]|upper }}</p>
+                        </div>
+                    </div>
                 </td>
-                <td class="p-4">{{ user.role|title }}</td>
-                <td class="p-4">{{ user.department }}</td>
-                <td class="p-4 flex space-x-2">
-                    <form method="POST" class="inline flex gap-2 items-center" onsubmit="return confirm('Reset password for {{ user.username }}?');">
-                        <input type="hidden" name="action" value="reset_password">
-                        <input type="hidden" name="username" value="{{ user.username }}">
-                        <input type="password" name="password" placeholder="New pass" class="border p-1 text-sm rounded w-24" required>
-                        <button type="submit" class="text-blue-600 hover:underline text-sm font-semibold">Reset</button>
-                    </form>
-                    {% if user.role != 'admin' %}
-                    <form method="POST" class="inline" onsubmit="return confirm('Delete user {{ user.username }}?');">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="username" value="{{ user.username }}">
-                        <button type="submit" class="text-red-600 hover:underline text-sm ml-2 font-semibold">Delete</button>
-                    </form>
-                    {% endif %}
+                <td class="p-8">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600">{{ user.role }}</span>
+                </td>
+                <td class="p-8">
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2">
+                             <span class="text-[10px] font-black text-gray-900 uppercase tracking-widest bg-red-50 text-red-600 px-2 py-1 rounded-lg">Home: {{ user.department }}</span>
+                        </div>
+                        
+                        <form method="POST" class="flex flex-wrap gap-2">
+                            <input type="hidden" name="action" value="update_permissions">
+                            <input type="hidden" name="username" value="{{ user.username }}">
+                            {% for dept in departments %}
+                                <div class="relative group">
+                                    <label class="flex flex-col space-y-1">
+                                        <span class="text-[8px] font-black text-gray-300 uppercase tracking-widest">{{ dept }}</span>
+                                        <div class="flex space-x-1">
+                                            <label class="flex items-center space-x-1 cursor-pointer">
+                                                <input type="checkbox" name="perms_{{ user.username }}_{{ dept }}" value="view" {% if 'view' in user.get('permissions', {}).get(dept, []) or 'all' in user.get('permissions', {}).get(dept, []) %}checked{% endif %} class="w-3 h-3 rounded text-red-600 focus:ring-red-500 border-gray-200">
+                                                <span class="text-[9px] font-bold text-gray-500">View</span>
+                                            </label>
+                                            <label class="flex items-center space-x-1 cursor-pointer">
+                                                <input type="checkbox" name="perms_{{ user.username }}_{{ dept }}" value="edit" {% if 'edit' in user.get('permissions', {}).get(dept, []) or 'all' in user.get('permissions', {}).get(dept, []) %}checked{% endif %} class="w-3 h-3 rounded text-red-600 focus:ring-red-500 border-gray-200">
+                                                <span class="text-[9px] font-bold text-gray-500">Edit</span>
+                                            </label>
+                                        </div>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            <button type="submit" class="self-end text-[9px] font-black bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-black transition uppercase tracking-widest">Update</button>
+                        </form>
+                    </div>
+                </td>
+                <td class="p-8">
+                    <div class="flex items-center space-x-4">
+                        <form method="POST" class="flex items-center space-x-2" onsubmit="return confirm('Override security credentials?');">
+                            <input type="hidden" name="action" value="reset_password">
+                            <input type="hidden" name="username" value="{{ user.username }}">
+                            <input type="password" name="password" placeholder="Key" class="w-20 bg-gray-100 border-none rounded-xl px-3 py-1.5 text-[10px] font-bold" required>
+                            <button type="submit" class="text-xs font-black text-blue-600 hover:underline uppercase tracking-widest">Reset</button>
+                        </form>
+                        {% if user.role != 'admin' %}
+                        <form method="POST" onsubmit="return confirm('Revoke all access?');">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="username" value="{{ user.username }}">
+                            <button type="submit" class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-600 hover:bg-red-100 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endfor %}

@@ -1,124 +1,161 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Customer Management</h1>
+<div class="mb-12">
+    <h1 class="text-4xl font-black text-gray-900 mb-2">Customer Portfolio</h1>
+    <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Managing client success & accounts</p>
+</div>
 
 {% if current_user.role == 'admin' %}
-<div class="bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
-    <h2 class="text-xl font-bold mb-4 text-gray-800">Add New Customer</h2>
-    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 mb-12">
+    <h2 class="text-xl font-black mb-8 text-gray-900 tracking-tight">Onboard New Client</h2>
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <input type="hidden" name="action" value="add">
-        <input type="text" name="name" placeholder="Customer Name" class="border p-2 rounded w-full" required>
-        <input type="text" name="website" placeholder="Website Link" class="border p-2 rounded w-full" required>
-        <input type="text" name="contact" placeholder="Contact Person / Phone" class="border p-2 rounded w-full" required>
-        <button type="submit" class="bg-red-600 text-white py-2 rounded hover:bg-red-700 font-bold md:col-span-2">Register Customer</button>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Brand Name</label>
+            <input type="text" name="name" placeholder="Acme Corp" class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600" required>
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Web URL</label>
+            <input type="text" name="website" placeholder="https://..." class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600" required>
+        </div>
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Point of Contact</label>
+            <input type="text" name="contact" placeholder="Name / Phone" class="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 font-bold focus:ring-2 focus:ring-red-600" required>
+        </div>
+        <button type="submit" class="bg-red-600 text-white font-black py-4 rounded-2xl hover:bg-red-700 transition md:col-span-3 shadow-xl shadow-red-100">Initialize Client Profile</button>
     </form>
 </div>
 {% endif %}
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     {% for customer in customers %}
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 flex flex-col">
-        <div class="p-5 border-b bg-gray-50 flex justify-between items-start">
-            <div>
-                <h3 class="text-lg font-bold text-gray-800">{{ customer.name }}</h3>
-                <a href="{{ customer.website }}" target="_blank" class="text-sm text-blue-600 hover:underline">{{ customer.website }}</a>
-                <p class="text-xs text-gray-400 mt-1">Contact: {{ customer.contact }}</p>
+    <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100 flex flex-col">
+        <div class="p-8 border-b bg-gray-50/50 flex justify-between items-start">
+            <div class="min-w-0">
+                <h3 class="text-2xl font-black text-gray-900 truncate tracking-tight">{{ customer.name }}</h3>
+                <a href="{{ customer.website }}" target="_blank" class="text-xs font-bold text-red-600 hover:underline flex items-center space-x-1 mt-1">
+                    <span>{{ customer.website }}</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-4">Contact: {{ customer.contact }}</p>
             </div>
-            <button onclick="document.getElementById('profile-{{ customer.id }}').classList.toggle('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
+            <button onclick="document.getElementById('details-{{ customer.id }}').classList.toggle('hidden')" class="w-10 h-10 bg-white rounded-xl shadow-sm border flex items-center justify-center text-gray-400 hover:text-red-600 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
             </button>
         </div>
         
-        <div id="profile-{{ customer.id }}" class="p-5 space-y-6 bg-white flex-1">
-            <!-- Weekly Payments -->
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Weekly Payments</h4>
+        <div id="details-{{ customer.id }}" class="p-8 space-y-10">
+            <!-- Weekly Payments Range -->
+            <div class="relative">
+                <div class="flex justify-between items-center mb-6">
+                    <h4 class="text-xs font-black text-gray-900 uppercase tracking-widest">Workspace Settlements</h4>
                     {% if current_user.role == 'admin' %}
-                    <button onclick="document.getElementById('pay-modal-{{ customer.id }}').classList.toggle('hidden')" class="text-xs text-red-600 font-bold hover:underline">+ Update</button>
+                    <button onclick="document.getElementById('pay-modal-{{ customer.id }}').classList.toggle('hidden')" class="bg-red-50 text-red-600 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg hover:bg-red-100">+ Update</button>
                     {% endif %}
                 </div>
                 
-                <div id="pay-modal-{{ customer.id }}" class="hidden mb-4 p-3 bg-gray-50 rounded border text-sm">
-                    <form method="POST" class="space-y-2">
+                <div id="pay-modal-{{ customer.id }}" class="hidden mb-8 p-6 bg-gray-50 rounded-2xl border-2 border-gray-100">
+                    <form method="POST" class="space-y-4">
                         <input type="hidden" name="action" value="update_payment">
                         <input type="hidden" name="customer_id" value="{{ customer.id }}">
-                        <input type="text" name="week" placeholder="e.g. Week 1, Feb" class="w-full p-1 border rounded" required>
-                        <select name="status" class="w-full p-1 border rounded">
-                            <option value="Paid">Paid</option>
-                            <option value="Pending">Pending</option>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Start Date</label>
+                                <input type="date" name="week_start" class="w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold" required>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">End Date</label>
+                                <input type="date" name="week_end" class="w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold" required>
+                            </div>
+                        </div>
+                        <select name="status" class="w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold">
+                            <option value="Paid">Cleared / Paid</option>
+                            <option value="Pending">Pending Audit</option>
                         </select>
-                        <button type="submit" class="w-full bg-red-600 text-white py-1 rounded text-xs font-bold">Save</button>
+                        <button type="submit" class="w-full bg-red-600 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest">Confirm Entry</button>
                     </form>
                 </div>
 
-                <div class="space-y-2">
-                    {% for p in customer.weekly_payments %}
-                    <div class="flex justify-between items-center text-sm p-2 rounded bg-gray-50">
-                        <span class="font-medium text-gray-700">{{ p.week }}</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {% if p.status == 'Paid' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">{{ p.status }}</span>
+                <div class="space-y-3">
+                    {% for p in customer.weekly_payments|reverse %}
+                    <div class="flex justify-between items-center p-4 rounded-2xl bg-gray-50/50 border border-gray-100 group transition hover:bg-white hover:shadow-lg hover:shadow-gray-100">
+                        <div>
+                            <p class="text-sm font-black text-gray-800 tracking-tight">{{ p.week }}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Logged: {{ p.date }}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter {% if p.status == 'Paid' %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %}">{{ p.status }}</span>
                     </div>
                     {% else %}
-                    <p class="text-xs text-gray-400 italic">No payment status recorded.</p>
+                    <div class="text-center py-6">
+                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">No ledger entries found</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
             
-            <!-- Invoices -->
+            <!-- Invoices Range -->
             <div>
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Invoices</h4>
+                <div class="flex justify-between items-center mb-6">
+                    <h4 class="text-xs font-black text-gray-900 uppercase tracking-widest">Billing Documentation</h4>
                     {% if current_user.role == 'admin' %}
-                    <button onclick="document.getElementById('inv-modal-{{ customer.id }}').classList.toggle('hidden')" class="text-xs text-red-600 font-bold hover:underline">+ Update</button>
+                    <button onclick="document.getElementById('inv-modal-{{ customer.id }}').classList.toggle('hidden')" class="bg-gray-100 text-gray-600 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg hover:bg-gray-200">+ Record</button>
                     {% endif %}
                 </div>
 
-                <div id="inv-modal-{{ customer.id }}" class="hidden mb-4 p-3 bg-gray-50 rounded border text-sm">
-                    <form method="POST" class="space-y-2">
+                <div id="inv-modal-{{ customer.id }}" class="hidden mb-8 p-6 bg-gray-50 rounded-2xl border-2 border-gray-100">
+                    <form method="POST" class="space-y-4">
                         <input type="hidden" name="action" value="update_invoice">
                         <input type="hidden" name="customer_id" value="{{ customer.id }}">
-                        <input type="text" name="week" placeholder="For week..." class="w-full p-1 border rounded" required>
-                        <select name="status" class="w-full p-1 border rounded" onchange="this.nextElementSibling.classList.toggle('hidden', this.value === 'Sent')">
-                            <option value="Sent">Sent</option>
-                            <option value="Not Sent">Not Sent</option>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Period Start</label>
+                                <input type="date" name="week_start" class="w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold" required>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Period End</label>
+                                <input type="date" name="week_end" class="w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold" required>
+                            </div>
+                        </div>
+                        <select name="status" class="w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold" onchange="const r = this.parentElement.querySelector('.reason-input'); if(this.value === 'Not Sent') { r.classList.remove('hidden'); r.required = true; } else { r.classList.add('hidden'); r.required = false; }">
+                            <option value="Sent">Dispatched / Sent</option>
+                            <option value="Not Sent">Held / Not Sent</option>
                         </select>
-                        <input type="text" name="reason" placeholder="Reason if not sent" class="w-full p-1 border rounded hidden">
-                        <button type="submit" class="w-full bg-red-600 text-white py-1 rounded text-xs font-bold">Save</button>
+                        <input type="text" name="reason" placeholder="Hold Reason / Dependency" class="reason-input w-full bg-white border-none rounded-xl px-4 py-2 text-xs font-bold hidden">
+                        <button type="submit" class="w-full bg-gray-900 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest">Sync Billing</button>
                     </form>
                 </div>
 
-                <div class="space-y-2">
-                    {% for i in customer.invoices %}
-                    <div class="p-2 rounded bg-gray-50 text-sm">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-medium text-gray-700">{{ i.week }}</span>
-                            <div class="flex items-center space-x-1">
+                <div class="space-y-3">
+                    {% for i in customer.invoices|reverse %}
+                    <div class="p-4 rounded-2xl bg-gray-50/50 border border-gray-100 transition hover:bg-white hover:shadow-lg hover:shadow-gray-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-sm font-black text-gray-800 tracking-tight">{{ i.week }}</p>
+                            <div class="flex items-center space-x-2">
                                 {% if i.status == 'Sent' %}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="text-[10px] font-bold text-green-700 uppercase">Sent</span>
+                                <div class="bg-emerald-100 p-1 rounded-lg">
+                                    <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                </div>
+                                <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Sent</span>
                                 {% else %}
-                                <span class="text-[10px] font-bold text-red-700 uppercase">Not Sent</span>
+                                <span class="text-[10px] font-black text-red-700 uppercase tracking-widest">Held</span>
                                 {% endif %}
                             </div>
                         </div>
                         {% if i.status == 'Not Sent' and i.reason %}
-                        <p class="text-[10px] text-gray-400 italic">Reason: {{ i.reason }}</p>
+                        <div class="mt-3 p-3 bg-red-50/50 rounded-xl border border-red-100">
+                            <p class="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Audit Note</p>
+                            <p class="text-xs text-red-700 font-bold leading-tight">{{ i.reason }}</p>
+                        </div>
                         {% endif %}
                     </div>
                     {% else %}
-                    <p class="text-xs text-gray-400 italic">No invoice status recorded.</p>
+                    <div class="text-center py-6">
+                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">No billing records</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
-    {% else %}
-    <div class="bg-white p-12 text-center rounded-xl border border-dashed border-gray-300 col-span-full">
-        <p class="text-gray-400">No customers registered in the system.</p>
     </div>
     {% endfor %}
 </div>

@@ -1,22 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 class="text-gray-500 font-semibold mb-2">Total Users</h3>
-        <p class="text-4xl font-bold text-gray-800">{{ users_count }}</p>
+<div class="mb-12">
+    <h1 class="text-4xl font-black text-gray-900 mb-2">Executive Summary</h1>
+    <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Data as of {{ global_date }}</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col justify-between">
+        <div>
+            <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-6">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <h3 class="text-gray-400 font-black uppercase tracking-widest text-[10px] mb-2">Total Workspace Members</h3>
+            <p class="text-5xl font-black text-gray-900 tracking-tighter">{{ users_count }}</p>
+        </div>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 class="text-gray-500 font-semibold mb-2">Total Tasks</h3>
-        <p class="text-4xl font-bold text-gray-800">{{ tasks_count }}</p>
+    <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col justify-between">
+        <div>
+            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </div>
+            <h3 class="text-gray-400 font-black uppercase tracking-widest text-[10px] mb-2">Daily Active Tasks</h3>
+            <p class="text-5xl font-black text-gray-900 tracking-tighter">{{ tasks_count }}</p>
+        </div>
+    </div>
+    <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col justify-between">
+        <div>
+            <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center mb-6">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="text-gray-400 font-black uppercase tracking-widest text-[10px] mb-2">Logged Attendance</h3>
+            <p class="text-5xl font-black text-gray-900 tracking-tighter">{{ attendance_count }}</p>
+        </div>
     </div>
 </div>
-<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-    <h3 class="text-lg font-bold mb-4">Quick Links</h3>
-    <div class="flex flex-wrap gap-4">
-        <a href="/users" class="bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 font-semibold">Manage Users</a>
-        <a href="/attendance" class="bg-green-50 text-green-600 px-4 py-2 rounded hover:bg-green-100 font-semibold">View Attendance</a>
-        <a href="/tasks" class="bg-purple-50 text-purple-600 px-4 py-2 rounded hover:bg-purple-100 font-semibold">Manage Tasks</a>
+
+<div class="bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
+    <h3 class="text-xl font-black text-gray-900 mb-8 tracking-tight">Rapid Access Operations</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <a href="/users?global_date={{ global_date }}" class="group bg-gray-50 p-6 rounded-2xl transition hover:bg-red-600 hover:shadow-2xl hover:shadow-red-200">
+            <p class="font-black text-gray-900 text-sm group-hover:text-white transition">Staff Management</p>
+            <p class="text-[10px] text-gray-400 group-hover:text-red-100 uppercase font-bold tracking-widest mt-1">HR Operations</p>
+        </a>
+        <a href="/attendance?global_date={{ global_date }}" class="group bg-gray-50 p-6 rounded-2xl transition hover:bg-blue-600 hover:shadow-2xl hover:shadow-blue-200">
+            <p class="font-black text-gray-900 text-sm group-hover:text-white transition">Time Tracking</p>
+            <p class="text-[10px] text-gray-400 group-hover:text-blue-100 uppercase font-bold tracking-widest mt-1">Attendance Log</p>
+        </a>
+        <a href="/tasks?global_date={{ global_date }}" class="group bg-gray-50 p-6 rounded-2xl transition hover:bg-purple-600 hover:shadow-2xl hover:shadow-purple-200">
+            <p class="font-black text-gray-900 text-sm group-hover:text-white transition">Workflow Engine</p>
+            <p class="text-[10px] text-gray-400 group-hover:text-purple-100 uppercase font-bold tracking-widest mt-1">Task Matrix</p>
+        </a>
+        <a href="/customers?global_date={{ global_date }}" class="group bg-gray-50 p-6 rounded-2xl transition hover:bg-emerald-600 hover:shadow-2xl hover:shadow-emerald-200">
+            <p class="font-black text-gray-900 text-sm group-hover:text-white transition">Account Ledger</p>
+            <p class="text-[10px] text-gray-400 group-hover:text-emerald-100 uppercase font-bold tracking-widest mt-1">Customer Success</p>
+        </a>
     </div>
 </div>
 {% endblock %}

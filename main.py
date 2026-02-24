@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -39,13 +39,14 @@ if "notices" not in db: db["notices"] = []
 def inject_user():
     user = None
     notifications = []
+    selected_date = request.args.get('global_date', datetime.now().strftime("%Y-%m-%d"))
     if 'username' in session:
         users = dict(db["users"])
         user = users.get(session['username'])
         if user:
             notices = list(db["notices"])
             notifications = [n for n in notices if n['target'] == 'all' or n['target'] == session['username']]
-    return dict(current_user=user, notifications=notifications)
+    return dict(current_user=user, notifications=notifications, global_date=selected_date)
 
 def login_required(f):
     def wrap(*args, **kwargs):
@@ -61,6 +62,14 @@ def admin_required(f):
         return f(*args, **kwargs)
     wrap.__name__ = f.__name__
     return wrap
+
+def has_permission(user, target_dept, action='view'):
+    if user['role'] == 'admin': return True
+    permissions = user.get('permissions', {})
+    dept_perms = permissions.get(target_dept, [])
+    if action in dept_perms or 'all' in dept_perms: return True
+    if user['role'] == 'leader' and user['department'] == target_dept: return True
+    return False
 
 @app.route('/')
 def index():
@@ -87,7 +96,8 @@ def setup():
                 "role": "admin",
                 "department": "Admin",
                 "contact": "",
-                "profile_image": ""
+                "profile_image": "",
+                "permissions": {}
             }
             db["users"] = users
             flash("Admin created. Please login.")
@@ -116,7 +126,15 @@ def logout():
 @login_required
 @admin_required
 def admin_dashboard():
-    return render_template('admin_dashboard.html', users_count=len(db["users"]), tasks_count=len(db["tasks"]))
+    date_str = request.args.get('global_date', datetime.now().strftime("%Y-%m-%d"))
+    tasks_list = list(db["tasks"])
+    daily_tasks = [t for t in tasks_list if t.get('date', '').startswith(date_str)]
+    attendance_list = list(db["attendance"])
+    daily_attendance = [a for a in attendance_list if a.get('date') == date_str]
+    return render_template('admin_dashboard.html', 
+                         users_count=len(db["users"]), 
+                         tasks_count=len(daily_tasks),
+                         attendance_count=len(daily_attendance))
 
 @app.route('/leader')
 @login_required
@@ -151,7 +169,8 @@ def manage_users():
                     "role": request.form.get('role', 'member'),
                     "department": request.form.get('department', 'Designers'),
                     "contact": "",
-                    "profile_image": ""
+                    "profile_image": "",
+                    "permissions": {}
                 }
         elif action == 'delete' and u and u in users and users[u]['role'] != 'admin':
             del users[u]
@@ -159,6 +178,12 @@ def manage_users():
             p = request.form.get('password')
             if p:
                 users[u]['password'] = generate_password_hash(p)
+        elif action == 'update_permissions' and u in users:
+            new_perms = {}
+            for dept in departments:
+                perms = request.form.getlist(f'perms_{u}_{dept}')
+                if perms: new_perms[dept] = perms
+            users[u]['permissions'] = new_perms
         db["users"] = users
         return redirect(url_for('manage_users'))
     return render_template('users.html', users=users.values(), departments=departments)
@@ -173,6 +198,7 @@ def attendance():
     
     records = list(db["attendance"])
     departments = list(db["departments"])
+    date_str = request.args.get('global_date', datetime.now().strftime("%Y-%m-%d"))
     
     if request.method == 'POST':
         action = request.form.get('action')
@@ -194,23 +220,25 @@ def attendance():
             t_out = datetime.strptime(t_str, "%H:%M")
             today_record['total_hours'] = round((t_out - t_in).total_seconds() / 3600, 2)
             db["attendance"] = records
-        return redirect(url_for('attendance'))
+        return redirect(url_for('attendance', global_date=date_str))
         
+    filtered = records
     if user['role'] in ['admin', 'leader']:
-        f_date, f_user, f_dept = request.args.get('date'), request.args.get('member'), request.args.get('department')
-        filtered = records
-        if f_date: filtered = [r for r in filtered if r['date'] == f_date]
+        f_user = request.args.get('member')
+        f_dept = request.args.get('department')
+        
+        filtered = [r for r in filtered if r['date'] == date_str]
         if f_user: filtered = [r for r in filtered if r['username'] == f_user]
         if f_dept: 
             dept_users = [usr['username'] for usr in users.values() if usr.get('department') == f_dept]
             filtered = [r for r in filtered if r['username'] in dept_users]
         elif user['role'] == 'leader':
-            dept_users = [usr['username'] for usr in users.values() if usr.get('department') == user.get('department')]
+            dept_users = [usr['username'] for usr in users.values() if has_permission(user, usr.get('department'))]
             filtered = [r for r in filtered if r['username'] in dept_users]
             
         return render_template('attendance_admin.html', records=filtered, users=users.values(), departments=departments)
     
-    return render_template('attendance_member.html', records=[r for r in records if r['username'] == u])
+    return render_template('attendance_member.html', records=[r for r in records if r['username'] == u and r['date'] == date_str])
 
 @app.route('/tasks', methods=['GET', 'POST'])
 @login_required
@@ -222,6 +250,7 @@ def tasks():
     
     tasks_list = list(db["tasks"])
     departments = list(db["departments"])
+    date_str = request.args.get('global_date', datetime.now().strftime("%Y-%m-%d"))
     
     if request.method == 'POST':
         action = request.form.get('action')
@@ -234,7 +263,7 @@ def tasks():
                 "title": request.form.get('title', 'Untitled'),
                 "description": request.form.get('description', ''),
                 "status": "Pending",
-                "date": datetime.now().strftime("%Y-%m-%d %H:%M")
+                "date": date_str + " " + datetime.now().strftime("%H:%M")
             })
         elif action == 'update':
             t_id = request.form.get('id')
@@ -244,23 +273,26 @@ def tasks():
         elif action == 'delete':
             tasks_list = [t for t in tasks_list if not (t['id'] == request.form.get('id') and (user['role'] == 'admin' or t['username'] == u))]
         db["tasks"] = tasks_list
-        return redirect(url_for('tasks'))
+        return redirect(url_for('tasks', global_date=date_str))
         
+    filtered = [t for t in tasks_list if t.get('date', '').startswith(date_str)]
     if user['role'] in ['admin', 'leader']:
-        f_user, f_dept, f_status = request.args.get('member'), request.args.get('department'), request.args.get('status')
-        filtered = tasks_list
+        f_user = request.args.get('member')
+        f_dept = request.args.get('department')
+        f_status = request.args.get('status')
+        
         if f_user: filtered = [t for t in filtered if t['username'] == f_user]
         if f_status: filtered = [t for t in filtered if t['status'] == f_status]
         if f_dept:
             dept_users = [usr['username'] for usr in users.values() if usr.get('department') == f_dept]
             filtered = [t for t in filtered if t['username'] in dept_users]
         elif user['role'] == 'leader':
-            dept_users = [usr['username'] for usr in users.values() if usr.get('department') == user.get('department')]
+            dept_users = [usr['username'] for usr in users.values() if has_permission(user, usr.get('department'))]
             filtered = [t for t in filtered if t['username'] in dept_users]
             
         return render_template('tasks_admin.html', tasks=filtered, users=users.values(), departments=departments)
     
-    return render_template('tasks_member.html', tasks=[t for t in tasks_list if t['username'] == u])
+    return render_template('tasks_member.html', tasks=[t for t in filtered if t['username'] == u])
 
 @app.route('/customers', methods=['GET', 'POST'])
 @login_required
@@ -284,22 +316,25 @@ def customers():
             })
         elif action == 'update_payment':
             c_id = request.form.get('customer_id')
-            week = request.form.get('week')
+            week_start = request.form.get('week_start')
+            week_end = request.form.get('week_end')
             status = request.form.get('status')
+            week_range = f"{week_start} - {week_end}"
             for c in customer_list:
                 if c['id'] == c_id:
-                    # Remove existing entry for same week if any
-                    c['weekly_payments'] = [p for p in c['weekly_payments'] if p['week'] != week]
-                    c['weekly_payments'].append({"week": week, "status": status})
+                    c['weekly_payments'] = [p for p in c['weekly_payments'] if p['week'] != week_range]
+                    c['weekly_payments'].append({"week": week_range, "status": status, "date": datetime.now().strftime("%Y-%m-%d")})
         elif action == 'update_invoice':
             c_id = request.form.get('customer_id')
-            week = request.form.get('week')
-            status = request.form.get('status') # 'Sent' or 'Not Sent'
+            week_start = request.form.get('week_start')
+            week_end = request.form.get('week_end')
+            status = request.form.get('status')
             reason = request.form.get('reason', '')
+            week_range = f"{week_start} - {week_end}"
             for c in customer_list:
                 if c['id'] == c_id:
-                    c['invoices'] = [i for i in c['invoices'] if i['week'] != week]
-                    c['invoices'].append({"week": week, "status": status, "reason": reason})
+                    c['invoices'] = [i for i in c['invoices'] if i['week'] != week_range]
+                    c['invoices'].append({"week": week_range, "status": status, "reason": reason, "date": datetime.now().strftime("%Y-%m-%d")})
         db["customers"] = customer_list
         return redirect(url_for('customers'))
         
@@ -313,6 +348,7 @@ def notices():
     if not user: return redirect(url_for('logout'))
     
     notice_list = list(db["notices"])
+    date_str = request.args.get('global_date', datetime.now().strftime("%Y-%m-%d"))
     
     if request.method == 'POST' and user['role'] == 'admin':
         action = request.form.get('action')
@@ -323,14 +359,14 @@ def notices():
                 "title": request.form.get('title', 'Notification'),
                 "message": request.form.get('message', ''),
                 "target": target,
-                "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "date": date_str + " " + datetime.now().strftime("%H:%M"),
                 "sender": session['username']
             })
             db["notices"] = notice_list
             flash("Notice sent successfully")
-            return redirect(url_for('notices'))
+            return redirect(url_for('notices', global_date=date_str))
             
-    visible_notices = [n for n in notice_list if n['target'] == 'all' or n['target'] == session['username'] or user['role'] == 'admin']
+    visible_notices = [n for n in notice_list if (n['target'] == 'all' or n['target'] == session['username'] or user['role'] == 'admin') and n.get('date', '').startswith(date_str)]
     return render_template('notices.html', notices=visible_notices, users=users.values())
 
 @app.route('/departments', methods=['GET', 'POST'])
